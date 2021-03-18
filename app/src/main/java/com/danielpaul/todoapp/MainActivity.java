@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -42,6 +43,21 @@ public class MainActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         chargerTodos();
+
+        todosListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Todo tacheSelectionne = todos.get(position);
+
+                Intent i = new Intent(MainActivity.this, Ajouter.class);
+
+                i.putExtra("id", tacheSelectionne.getId());
+                i.putExtra("titre", tacheSelectionne.getTitre());
+                i.putExtra("description", tacheSelectionne.getDescription());
+
+                startActivity(i);
+            }
+        });
 
         FloatingActionButton ajouter = findViewById(R.id.btn_ajouter);
         ajouter.setOnClickListener(new View.OnClickListener() {

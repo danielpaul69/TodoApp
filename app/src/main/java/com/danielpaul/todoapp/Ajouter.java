@@ -3,6 +3,7 @@ package com.danielpaul.todoapp;
 import android.app.ActionBar;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,7 +25,10 @@ public class Ajouter extends AppCompatActivity {
 
     TextInputEditText titreTextView, descriptionTextView;
 
+    Button supprimerButton;
     FloatingActionButton validerButton;
+
+    String tacheId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,28 +40,47 @@ public class Ajouter extends AppCompatActivity {
         titreTextView = findViewById(R.id.titre);
         descriptionTextView = findViewById(R.id.description);
 
+        tacheId = getIntent().getStringExtra("id");
+
+        supprimerButton = findViewById(R.id.supprimer);
+        if (tacheId != null && !tacheId.trim().isEmpty()) {
+            titreTextView.setText(getIntent().getStringExtra("titre"));
+            descriptionTextView.setText(getIntent().getStringExtra("description"));
+
+            supprimerButton.setVisibility(View.VISIBLE);
+        }
+
+        supprimerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                supprimer();
+            }
+        });
+
         validerButton = findViewById(R.id.btn_valider);
         validerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ajouter();
+                Map<String, Object> tache = new HashMap<>();
+                tache.put("titre", titreTextView.getText().toString());
+                tache.put("description", descriptionTextView.getText().toString());
+
+                if (tacheId != null && !tacheId.trim().isEmpty()) {
+                    modifier(tache);
+                } else {
+                    ajouter(tache);
+                }
             }
         });
     }
 
-    public void ajouter(){
-        Map<String, Object> user = new HashMap<>();
-        user.put("titre", titreTextView.getText().toString());
-        user.put("description", descriptionTextView.getText().toString());
-
-// Add a new document with a generated ID
+    public void ajouter(Map<String, Object> tache) {
         db.collection("taches")
-                .add(user)
+                .add(tache)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         Snackbar.make(findViewById(R.id.activity_ajouter), "Tâches ajoutée avec succès !", Snackbar.LENGTH_LONG).show();
-
                         finish();
                     }
                 })
@@ -67,5 +90,43 @@ public class Ajouter extends AppCompatActivity {
                         Snackbar.make(findViewById(R.id.activity_ajouter), "Une erreur est survenue", Snackbar.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    public void modifier(Map<String, Object> tache) {
+        db.collection("taches")
+                .document(tacheId)
+                .set(tache)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Snackbar.make(findViewById(R.id.activity_ajouter), "Tâche modifiée avec succès ! ", Snackbar.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Snackbar.make(findViewById(R.id.activity_ajouter), "Une erreur est survenue", Snackbar.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    public void supprimer() {
+        if (tacheId != null && !tacheId.trim().isEmpty()) {
+            db.collection("taches")
+                    .document(tacheId)
+                    .delete()
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Snackbar.make(findViewById(R.id.activity_ajouter), "Tâche modifiée avec succès ! ", Snackbar.LENGTH_LONG).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Snackbar.make(findViewById(R.id.activity_ajouter), "Une erreur est survenue", Snackbar.LENGTH_LONG).show();
+                        }
+                    });
+        }
     }
 }
